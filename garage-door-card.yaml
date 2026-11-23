@@ -1,0 +1,195 @@
+type: custom:button-card
+entity: cover.garage_gdo_blaq_799094_garage_door
+show_name: false
+show_icon: false
+show_state: false
+tap_action:
+  action: none
+hold_action:
+  action: none
+double_tap_action:
+  action: none
+styles:
+  card:
+    - background: '#172a45'
+    - border: 1px solid rgba(255,255,255,0.08)
+    - border-radius: 24px
+    - padding: 32px 40px 32px 24px
+    - box-shadow: none
+    - color: '#e8edf4'
+    - cursor: default
+  grid:
+    - grid-template-areas: '"img ." "img label" "img state" "img btn" "img slider" "img ."'
+    - grid-template-columns: 1fr 1.05fr
+    - grid-template-rows: 1fr auto auto auto auto 1fr
+    - column-gap: 48px
+  custom_fields:
+    light:
+      - position: absolute
+      - top: 18px
+      - left: 18px
+      - z-index: 1
+    img:
+      - align-self: center
+      - justify-self: center
+      - width: 100%
+    label:
+      - justify-self: start
+      - font-size: 13px
+      - font-weight: 700
+      - letter-spacing: 0.08em
+      - color: '#9aa7b8'
+    state:
+      - justify-self: start
+      - margin: 4px 0 18px
+    btn:
+      - justify-self: start
+    slider:
+      - justify-self: stretch
+      - margin-top: 26px
+custom_fields:
+  light:
+    card:
+      type: custom:button-card
+      entity: switch.garage_lights
+      icon: mdi:lightbulb-outline
+      show_name: false
+      show_state: false
+      tap_action:
+        action: toggle
+        haptic: light
+      hold_action:
+        action: more-info
+      styles:
+        card:
+          - width: 52px
+          - height: 52px
+          - border-radius: 50%
+          - background: rgba(255,255,255,0.06)
+          - box-shadow: none
+          - padding: 0
+        icon:
+          - width: 28px
+          - color: rgba(255,255,255,0.35)
+      state:
+        - value: 'on'
+          icon: mdi:lightbulb-on
+          styles:
+            card:
+              - background: rgba(255,200,60,0.18)
+              - box-shadow: 0 0 18px rgba(255,200,60,0.35)
+            icon:
+              - color: '#ffc83c'
+        - value: unavailable
+          icon: mdi:lightbulb-off-outline
+  img: |
+    [[[
+      const st = entity.state;
+      const known = ['open', 'closed', 'opening', 'closing'].includes(st);
+      if (!known) {
+        const d = 'rgba(255,255,255,0.12)';
+        return `<svg viewBox="110 105 510 330" style="width:100%;max-width:480px;display:block">
+          <polyline points="162,418 162,208 363,122 565,208 565,418" fill="none" stroke="${d}" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>
+          <polyline points="197,418 197,235 530,235 530,418" fill="none" stroke="${d}" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>
+          <line x1="125" y1="418" x2="602" y2="418" stroke="${d}" stroke-width="10" stroke-linecap="round"/>
+        </svg>`;
+      }
+      let p = entity.attributes.current_position;
+      if (p === undefined) p = st === 'closed' ? 0 : 100;
+      const top = 248, bottom = 408;
+      const edge = Math.max(top + (bottom - top) * (1 - p / 100), 252);
+      let slats = '';
+      for (let y = 261; y < edge - 10; y += 26) {
+        slats += `<line x1="210" y1="${y}" x2="518" y2="${y}" stroke="rgba(255,255,255,0.45)" stroke-width="9" stroke-linecap="round"/>`;
+      }
+      slats += `<line x1="210" y1="${edge}" x2="518" y2="${edge}" stroke="rgba(255,255,255,0.9)" stroke-width="12" stroke-linecap="round"/>`;
+      const c = 'rgba(255,255,255,0.22)';
+      return `<svg viewBox="110 105 510 330" style="width:100%;max-width:480px;display:block">
+        <polyline points="162,418 162,208 363,122 565,208 565,418" fill="none" stroke="${c}" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>
+        <polyline points="197,418 197,235 530,235 530,418" fill="none" stroke="${c}" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>
+        ${slats}
+        <line x1="125" y1="418" x2="602" y2="418" stroke="${c}" stroke-width="10" stroke-linecap="round"/>
+      </svg>`;
+    ]]]
+  label: GARAGE DOOR
+  state: |
+    [[[
+      const st = entity.state;
+      const names = { open: 'Open', closed: 'Closed', opening: 'Opening…', closing: 'Closing…' };
+      if (!names[st]) {
+        return `<span style="font-size:52px;font-weight:700;letter-spacing:-0.5px;color:#6b7a8f">Unavailable</span>`;
+      }
+      let p = entity.attributes.current_position;
+      if (p === undefined) p = st === 'closed' ? 0 : 100;
+      return `<span style="font-size:52px;font-weight:700;letter-spacing:-0.5px">${names[st] || st}</span>
+              <span style="font-size:20px;color:#a9b4c3;margin-left:16px">${p}% open</span>`;
+    ]]]
+  btn:
+    card:
+      type: custom:button-card
+      entity: cover.garage_gdo_blaq_799094_garage_door
+      show_icon: false
+      show_state: false
+      name: |
+        [[[
+          const st = entity.state;
+          const [icon, text] =
+            (st === 'opening' || st === 'closing') ? ['mdi:stop', 'Stop'] :
+            (st === 'closed') ? ['mdi:arrow-up', 'Open'] :
+            (st === 'open') ? ['mdi:arrow-down', 'Close'] : ['mdi:wifi-off', 'Offline'];
+          return `<div style="display:flex;align-items:center;width:100%">
+            <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid rgba(255,255,255,0.55);border-radius:50%">
+              <ha-icon icon="${icon}" style="--mdc-icon-size:22px"></ha-icon></span>
+            <span style="flex:1;text-align:center;padding-right:38px">${text}</span></div>`;
+        ]]]
+      tap_action:
+        action: perform-action
+        perform_action: cover.toggle
+        target:
+          entity_id: cover.garage_gdo_blaq_799094_garage_door
+        haptic: medium
+      styles:
+        card:
+          - width: 215px
+          - height: 64px
+          - border-radius: 14px
+          - background: '#5b7cfa'
+          - box-shadow: 0 4px 14px rgba(91,124,250,0.35)
+          - padding: 0 14px
+          - color: white
+        name:
+          - justify-self: stretch
+          - font-size: 19px
+          - font-weight: 700
+          - overflow: visible
+      state:
+        - operator: template
+          value: "[[[ return !['open','closed','opening','closing'].includes(entity.state); ]]]"
+          styles:
+            card:
+              - background: '#3a4659'
+              - box-shadow: none
+              - opacity: 0.6
+              - pointer-events: none
+  slider: |
+    [[[
+      const p = entity.attributes.current_position;
+      if (p === undefined) return '';
+      const id = entity.entity_id;
+      return `<style>
+        .gdo-sl input{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:#eef2f7;margin:16px 0 12px;outline:none}
+        .gdo-sl input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#5b7cfa;cursor:pointer}
+        .gdo-sl input::-moz-range-thumb{width:18px;height:18px;border:none;border-radius:50%;background:#5b7cfa;cursor:pointer}
+      </style>
+      <div class="gdo-sl">
+        <div style="display:flex;justify-content:space-between;font-size:16px">
+          <span style="color:#d5dde8">Set position</span>
+          <span class="pv" style="color:#4fb3ff;font-weight:700">${p}%</span></div>
+        <input type="range" min="0" max="100" step="1" value="${p}"
+          onpointerdown="event.stopPropagation()" ontouchstart="event.stopPropagation()"
+          oninput="this.closest('.gdo-sl').querySelector('.pv').textContent=this.value+'%'"
+          onchange="document.querySelector('home-assistant').hass.callService('cover','set_cover_position',{entity_id:'${id}',position:Number(this.value)})">
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:#a9b4c3">
+          <span>Closed</span><span>Fully open</span></div>
+      </div>`;
+    ]]]
